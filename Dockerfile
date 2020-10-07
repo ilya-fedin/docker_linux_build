@@ -2,8 +2,8 @@ FROM centos:7 AS builder
 
 ENV GIT https://github.com
 ENV PKG_CONFIG_PATH /usr/local/lib/pkgconfig
-ENV QT 5_12_8
-ENV QT_PREFIX /usr/local/desktop-app/Qt-5.12.8
+ENV QT 5_15_1
+ENV QT_PREFIX /usr/local/desktop-app/Qt-5.15.1
 ENV OPENSSL_VER 1_1_1
 ENV OPENSSL_PREFIX /usr/local/desktop-app/openssl-1.1.1
 
@@ -345,15 +345,13 @@ COPY --from=wayland ${LibrariesPath}/wayland-cache /
 COPY --from=openssl ${LibrariesPath}/openssl-cache /
 COPY --from=xkbcommon ${LibrariesPath}/xkbcommon-cache /
 
-RUN git clone -b v5.12.8 --depth=1 git://code.qt.io/qt/qt5.git qt_${QT}
+RUN git clone -b v5.15.1 --depth=1 git://code.qt.io/qt/qt5.git qt_${QT}
 WORKDIR qt_${QT}
 RUN perl init-repository --module-subset=qtbase,qtwayland,qtimageformats,qtsvg
 RUN git submodule update qtbase qtwayland qtimageformats qtsvg
 
 WORKDIR qtbase
 RUN find ../../patches/qtbase_${QT} -type f -print0 | sort -z | xargs -r0 git apply
-WORKDIR ../qtwayland
-RUN find ../../patches/qtwayland_${QT} -type f -print0 | sort -z | xargs -r0 git apply
 WORKDIR ..
 
 RUN scl enable devtoolset-8 -- ./configure -prefix "$QT_PREFIX" \
@@ -364,9 +362,9 @@ RUN scl enable devtoolset-8 -- ./configure -prefix "$QT_PREFIX" \
 	-qt-libjpeg \
 	-qt-harfbuzz \
 	-qt-pcre \
-	-qt-xcb \
 	-no-icu \
 	-no-gtk \
+	-no-feature-wayland-server \
 	-static \
 	-dbus-runtime \
 	-openssl-linked \
